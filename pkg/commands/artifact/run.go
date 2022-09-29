@@ -460,16 +460,27 @@ func initScannerConfig(opts flag.Options, cacheClient cache.Cache) (ScannerConfi
 	var configScannerOptions config.ScannerOption
 	if slices.Contains(opts.SecurityChecks, types.SecurityCheckConfig) {
 		log.Logger.Info("Misconfiguration scanning is enabled")
+
+		var downloadedPolicyPaths []string
+		if !opts.SkipPolicyUpdate {
+			var err error
+			downloadedPolicyPaths, err = operation.InitBuiltinPolicies(context.Background(), opts.CacheDir, opts.Quiet, opts.SkipPolicyUpdate)
+			if err != nil {
+				log.Logger.Debug(err)
+			}
+		}
+
 		configScannerOptions = config.ScannerOption{
-			Trace:            opts.Trace,
-			Namespaces:       append(opts.PolicyNamespaces, defaultPolicyNamespaces...),
-			PolicyPaths:      opts.PolicyPaths,
-			DataPaths:        opts.DataPaths,
-			HelmValues:       opts.HelmValues,
-			HelmValueFiles:   opts.HelmValueFiles,
-			HelmFileValues:   opts.HelmFileValues,
-			HelmStringValues: opts.HelmStringValues,
-			TerraformTFVars:  opts.TerraformTFVars,
+			Trace:                   opts.Trace,
+			Namespaces:              append(opts.PolicyNamespaces, defaultPolicyNamespaces...),
+			PolicyPaths:             append(opts.PolicyPaths, downloadedPolicyPaths...),
+			DisableEmbeddedPolicies: opts.DisableEmbeddedPolicies,
+			DataPaths:               opts.DataPaths,
+			HelmValues:              opts.HelmValues,
+			HelmValueFiles:          opts.HelmValueFiles,
+			HelmFileValues:          opts.HelmFileValues,
+			HelmStringValues:        opts.HelmStringValues,
+			TerraformTFVars:         opts.TerraformTFVars,
 		}
 	}
 

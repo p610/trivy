@@ -1,9 +1,5 @@
 package flag
 
-import (
-	"github.com/aquasecurity/trivy/pkg/log"
-)
-
 // e.g. config yaml:
 //
 //	misconfiguration:
@@ -22,13 +18,19 @@ var (
 		ConfigName: "misconfiguration.skip-policy-update",
 		Value:      false,
 		Usage:      "deprecated",
-		Deprecated: true,
+		//Deprecated: true,
 	}
 	TraceFlag = Flag{
 		Name:       "trace",
 		ConfigName: "misconfiguration.trace",
 		Value:      false,
 		Usage:      "enable more verbose trace output for custom queries",
+	}
+	DisableEmbeddedPoliciesFlag = Flag{
+		Name:       "disable-embedded-policies",
+		ConfigName: "misconfiguration.disable-embedded-policies",
+		Value:      false,
+		Usage:      "disable embedded misconfiguration policies",
 	}
 	ConfigPolicyFlag = Flag{
 		Name:       "config-policy",
@@ -83,8 +85,10 @@ var (
 // MisconfFlagGroup composes common printer flag structs used for commands providing misconfinguration scanning.
 type MisconfFlagGroup struct {
 	IncludeNonFailures *Flag
-	SkipPolicyUpdate   *Flag // deprecated
-	Trace              *Flag
+	//SkipPolicyUpdate        *Flag // deprecated
+	SkipPolicyUpdate        *Flag
+	Trace                   *Flag
+	DisableEmbeddedPolicies *Flag
 
 	// Rego
 	PolicyPaths      *Flag
@@ -101,8 +105,10 @@ type MisconfFlagGroup struct {
 
 type MisconfOptions struct {
 	IncludeNonFailures bool
-	SkipPolicyUpdate   bool // deprecated
-	Trace              bool
+	//SkipPolicyUpdate        bool // deprecated
+	SkipPolicyUpdate        bool
+	Trace                   bool
+	DisableEmbeddedPolicies bool
 
 	// Rego
 	PolicyPaths      []string
@@ -119,17 +125,18 @@ type MisconfOptions struct {
 
 func NewMisconfFlagGroup() *MisconfFlagGroup {
 	return &MisconfFlagGroup{
-		IncludeNonFailures: &IncludeNonFailuresFlag,
-		SkipPolicyUpdate:   &SkipPolicyUpdateFlag,
-		Trace:              &TraceFlag,
-		PolicyPaths:        &ConfigPolicyFlag,
-		DataPaths:          &ConfigDataFlag,
-		PolicyNamespaces:   &PolicyNamespaceFlag,
-		HelmValues:         &HelmSetFlag,
-		HelmFileValues:     &HelmSetFileFlag,
-		HelmStringValues:   &HelmSetStringFlag,
-		HelmValueFiles:     &HelmValuesFileFlag,
-		TerraformTFVars:    &TfVarsFlag,
+		IncludeNonFailures:      &IncludeNonFailuresFlag,
+		SkipPolicyUpdate:        &SkipPolicyUpdateFlag,
+		Trace:                   &TraceFlag,
+		DisableEmbeddedPolicies: &DisableEmbeddedPoliciesFlag,
+		PolicyPaths:             &ConfigPolicyFlag,
+		DataPaths:               &ConfigDataFlag,
+		PolicyNamespaces:        &PolicyNamespaceFlag,
+		HelmValues:              &HelmSetFlag,
+		HelmFileValues:          &HelmSetFileFlag,
+		HelmStringValues:        &HelmSetStringFlag,
+		HelmValueFiles:          &HelmValuesFileFlag,
+		TerraformTFVars:         &TfVarsFlag,
 	}
 }
 
@@ -142,6 +149,7 @@ func (f *MisconfFlagGroup) Flags() []*Flag {
 		f.IncludeNonFailures,
 		f.SkipPolicyUpdate,
 		f.Trace,
+		f.DisableEmbeddedPolicies,
 		f.PolicyPaths,
 		f.DataPaths,
 		f.PolicyNamespaces,
@@ -154,13 +162,15 @@ func (f *MisconfFlagGroup) Flags() []*Flag {
 }
 
 func (f *MisconfFlagGroup) ToOptions() (MisconfOptions, error) {
-	skipPolicyUpdateFlag := getBool(f.SkipPolicyUpdate)
-	if skipPolicyUpdateFlag {
-		log.Logger.Warn("'--skip-policy-update' is no longer necessary as the built-in policies are embedded into the binary")
-	}
+	//skipPolicyUpdateFlag := getBool(f.SkipPolicyUpdate) // TODO: deprecate the deprecation?
+	//if skipPolicyUpdateFlag {
+	//	log.Logger.Warn("'--skip-policy-update' is no longer necessary as the built-in policies are embedded into the binary")
+	//}
 	return MisconfOptions{
-		IncludeNonFailures: getBool(f.IncludeNonFailures),
-		Trace:              getBool(f.Trace),
+		IncludeNonFailures:      getBool(f.IncludeNonFailures),
+		Trace:                   getBool(f.Trace),
+		DisableEmbeddedPolicies: getBool(f.DisableEmbeddedPolicies),
+		SkipPolicyUpdate:        getBool(f.SkipPolicyUpdate),
 
 		PolicyPaths:      getStringSlice(f.PolicyPaths),
 		DataPaths:        getStringSlice(f.DataPaths),

@@ -26,6 +26,7 @@ import (
 	"github.com/aquasecurity/defsec/pkg/scanners/rbac"
 	tfscanner "github.com/aquasecurity/defsec/pkg/scanners/terraform"
 
+	_ "github.com/aquasecurity/defsec/pkg/rego"
 	"github.com/aquasecurity/trivy/pkg/fanal/analyzer"
 	"github.com/aquasecurity/trivy/pkg/fanal/analyzer/config"
 	"github.com/aquasecurity/trivy/pkg/fanal/artifact"
@@ -148,6 +149,7 @@ func newMisconfPostHandler(artifactOpt artifact.Option) (handler.PostHandler, er
 	opts := []options.ScannerOption{
 		options.ScannerWithSkipRequiredCheck(true),
 		options.ScannerWithEmbeddedPolicies(!artifactOpt.MisconfScannerOption.DisableEmbeddedPolicies),
+		//options.ScannerWithEmbeddedLibraries(false), // TODO
 	}
 
 	policyFS, policyPaths, err := createPolicyFS(opt.PolicyPaths)
